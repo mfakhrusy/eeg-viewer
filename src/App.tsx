@@ -5,11 +5,11 @@ import { Toolbar } from '@/components/Toolbar';
 import { useEegStore } from '@/stores/eegStore';
 
 function App() {
-  const generate = useEegStore((s) => s.generate);
+  const loadSample = useEegStore((s) => s.loadSample);
 
   useEffect(() => {
-    generate();
-  }, [generate]);
+    loadSample();
+  }, [loadSample]);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">

@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 import type { EegChannel } from '@/types/eeg';
-import { generateEegData, DEFAULT_EEG_CONFIG } from '@/utils/eegGenerator';
 import { parseCsvText } from '@/utils/csvParser';
-
-type DataSource = 'synthetic' | 'csv';
 
 interface EegState {
   channels: EegChannel[];
@@ -11,11 +8,11 @@ interface EegState {
   timeWindow: number;
   scrollOffset: number;
   selectedChannel: string | null;
-  dataSource: DataSource;
   fileName: string | null;
+  loading: boolean;
 
-  generate: () => void;
   loadCsv: (text: string, fileName: string, sampleRate?: number) => void;
+  loadSample: (file?: string) => Promise<void>;
   setTimeWindow: (window: number) => void;
   setScrollOffset: (offset: number) => void;
   toggleChannel: (label: string) => void;
@@ -25,21 +22,25 @@ interface EegState {
 
 export const useEegStore = create<EegState>((set) => ({
   channels: [],
-  sampleRate: DEFAULT_EEG_CONFIG.sampleRate,
+  sampleRate: 500,
   timeWindow: 5,
   scrollOffset: 0,
   selectedChannel: null,
-  dataSource: 'synthetic',
   fileName: null,
-
-  generate: () => {
-    const channels = generateEegData(DEFAULT_EEG_CONFIG);
-    set({ channels, scrollOffset: 0, dataSource: 'synthetic', fileName: null, sampleRate: DEFAULT_EEG_CONFIG.sampleRate });
-  },
+  loading: false,
 
   loadCsv: (text, fileName, sampleRate = 500) => {
+    set({ loading: true });
     const channels = parseCsvText(text);
-    set({ channels, scrollOffset: 0, dataSource: 'csv', fileName, sampleRate });
+    set({ channels, scrollOffset: 0, fileName, sampleRate, loading: false });
+  },
+
+  loadSample: async (file = 's00.csv') => {
+    set({ loading: true });
+    const res = await fetch(`/data/${file}`);
+    const text = await res.text();
+    const channels = parseCsvText(text);
+    set({ channels, scrollOffset: 0, fileName: file, sampleRate: 500, loading: false });
   },
 
   setTimeWindow: (timeWindow) =>

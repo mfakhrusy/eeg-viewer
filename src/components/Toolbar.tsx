@@ -1,8 +1,13 @@
 import { useRef } from 'react';
 import { useEegStore } from '@/stores/eegStore';
 
+const SAMPLE_FILES = [
+  { label: 'Subject 00', file: 's00.csv' },
+  { label: 'Subject 01', file: 's01.csv' },
+];
+
 export function Toolbar() {
-  const { generate, loadCsv, timeWindow, setTimeWindow, scrollOffset, setScrollOffset, sampleRate, channels, dataSource, fileName } =
+  const { loadCsv, loadSample, timeWindow, setTimeWindow, scrollOffset, setScrollOffset, sampleRate, channels, fileName } =
     useEegStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -19,39 +24,39 @@ export function Toolbar() {
     reader.readAsText(file);
   };
 
-  const handleLoadSample = async () => {
-    const res = await fetch('/data/s00.csv');
-    const text = await res.text();
-    loadCsv(text, 's00.csv');
+  const handleSampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const file = e.target.value;
+    if (file) loadSample(file);
   };
 
   return (
     <div className="flex items-center gap-4 bg-zinc-900 rounded-lg border border-zinc-800 p-3 flex-wrap">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={generate}
-          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded transition-colors"
+      <label className="flex items-center gap-2 text-sm text-zinc-400">
+        Sample
+        <select
+          value={fileName && SAMPLE_FILES.some((s) => s.file === fileName) ? fileName : ''}
+          onChange={handleSampleChange}
+          className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-300 text-sm"
         >
-          Synthetic
-        </button>
-        <button
-          onClick={handleLoadSample}
-          className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded transition-colors"
-        >
-          Sample Data
-        </button>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="px-4 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded transition-colors"
-        >
-          Upload CSV
-        </button>
-        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-      </div>
+          {SAMPLE_FILES.map((s) => (
+            <option key={s.file} value={s.file}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="px-4 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded transition-colors"
+      >
+        Upload CSV
+      </button>
+      <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
 
       {fileName && (
         <span className="text-xs text-zinc-500">
-          {dataSource === 'csv' ? fileName : 'Synthetic'} · {maxDuration.toFixed(1)}s · {sampleRate} Hz
+          {fileName} · {maxDuration.toFixed(1)}s · {sampleRate} Hz
         </span>
       )}
 

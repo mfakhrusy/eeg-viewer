@@ -8,7 +8,7 @@ const MARGIN = { top: 20, right: 20, bottom: 30, left: 60 };
 export function WaveformViewer() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { channels, sampleRate, timeWindow, scrollOffset } = useEegStore();
+  const { channels, sampleRate, timeWindow, scrollOffset, loading } = useEegStore();
 
   const visibleChannels = channels.filter((ch) => ch.visible);
 
@@ -91,10 +91,21 @@ export function WaveformViewer() {
   }, [visibleChannels, sampleRate, timeWindow, scrollOffset]);
 
   return (
-    <div ref={containerRef} className="w-full overflow-hidden bg-zinc-950 rounded-lg border border-zinc-800">
-      {visibleChannels.length === 0 ? (
+    <div ref={containerRef} className="relative w-full overflow-hidden bg-zinc-950 rounded-lg border border-zinc-800">
+      {loading && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm">
+          <div className="flex items-center gap-3 text-zinc-400">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span className="text-sm">Loading EEG data...</span>
+          </div>
+        </div>
+      )}
+      {visibleChannels.length === 0 && !loading ? (
         <div className="flex items-center justify-center h-64 text-zinc-500">
-          No channels to display. Generate data or enable channels.
+          No channels to display.
         </div>
       ) : (
         <svg ref={svgRef} className="w-full" />
